@@ -26,7 +26,7 @@ function Predictor(fitter, X) {
 			})
 			return maxClass;
 		},
-		"predict" : function() {
+		"predict" : function(cb) {
 			var self = this;
 			y = [];
 			//initialize L and run the predictor
@@ -45,7 +45,7 @@ function Predictor(fitter, X) {
 
 				y.push(self.calcMax(currentExample));
 			});
-			return y;
+			return cb(y);
 		}
 	};
 
