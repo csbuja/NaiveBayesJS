@@ -24,6 +24,16 @@ function newObjectExtend(obj){ //this is tested and working
 	return x;
 }
 
+
+//had an issue with creating this with array.apply
+function createFeaturesByClass(len){
+	x = [];
+	for(var i =0 ; i<len; ++i) {
+		x.push([]);
+	}
+	return x;
+}
+
 //requires that y.length is equal to X.length 
 //requires that there is at least 1 row
 function Fitter(X,y) {
@@ -52,8 +62,7 @@ function Fitter(X,y) {
 			//initialize the class counts to 0
 			classCount[classname] = 0.0;
 			//each class mapping in featuresByClass is an array of length of first row in training data
-			featuresByClass[classname] = Array.apply(null, []);
-
+			featuresByClass[classname] = createFeaturesByClass(X[0].length);
 			counter++;
 			if (counter === _.keys(classCount).length) { // this happens once.
 				f = cb(classesSeen,classCount,numClasses,featuresByClass,X,y);
@@ -73,13 +82,9 @@ function Fitter(X,y) {
 		"calcStatisticsForFeatureOfClass" : function(){
 			var self = this;
 			_.each(self.featuresByClass, function(val,classname){
-
-				_.each(self.X,function(v,j){
-					var mean = stats.mean(val);
-					var variance =  stats.variance(val);
-					console.log(val);
-					console.log(mean);
-					console.log(variance);
+				_.each(self.X[0],function(v,j){
+					var mean = stats.mean(val[j]);
+					var variance =  stats.variance(val[j]);
 					// Can't create a gaussian with 0 variance
 
 					if (variance!==0.0) self.featuresByClass[classname][j] = gaussian(mean,variance);
@@ -100,9 +105,10 @@ function Fitter(X,y) {
 				var classLabel = self.y[i];
 				self.classCount[self.y[i]] +=1;
 				_.each(self.X[i], function(val,j){
-					self.featuresByClass[classLabel].push(val); 
+					self.featuresByClass[classLabel][j].push(val); 
 				});
 			});
+
 			self.calcPiClass();
 			self.calcStatisticsForFeatureOfClass();
 			cb(self);

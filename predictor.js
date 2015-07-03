@@ -40,7 +40,6 @@ function Predictor(fitter, X) {
 					var likelihood = Math.log(_.reduce(self.fitter.featuresByClass[classname],function(memo,v){
 						var xFeatureValue = self.X[i][j];
 						++j;
-						// console.log(v)
 						return memo * v.pdf(xFeatureValue);
 					},1)); //start at 1 because the reduction is a product
 
@@ -51,7 +50,7 @@ function Predictor(fitter, X) {
 				});
 				y.push(self.calcMax(rowPosteriorByClass)); // predicts the class with the maximum postestior
 			});
-			console.log(y)
+
 			return cb(y);
 		}
 	};
