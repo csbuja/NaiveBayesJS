@@ -2,6 +2,28 @@ var _ = require("underscore");
 var stats = require("stats-lite");
 var gaussian = require('gaussian');
 
+//a class needed when the gaussian becomes a dirac function in the limit
+function FakeGaussianDiracInLimit(mean,variance){
+	var fakeGaussian = {
+		"mean" : mean,
+		"variance" : variance,
+		"pdf" : function(x) {
+			return (x===this.mean) ? 1 : 0;
+		}
+	}
+
+	return fakeGaussian;
+}
+
+function newObjectExtend(obj){ //this is tested and working
+	x = {}
+	_.each(obj,function(val,key){
+		x[key] = val;
+	});
+
+	return x;
+}
+
 //requires that y.length is equal to X.length 
 //requires that there is at least 1 row
 function Fitter(X,y) {
@@ -21,15 +43,19 @@ function Fitter(X,y) {
 		}
 
 		//initialize counts to 0 for each class and features for each class
-		var classCount = _.extend(classesSeen);
-		var featuresByClass = _.extend(classesSeen);
+		var classCount = newObjectExtend(classesSeen);
+		var featuresByClass = newObjectExtend(classesSeen);
 		var counter = 0;
-		f = 0
-		_.each(classCount, function(v,i){
-			classCount[i] = 0;
-			featuresByClass[i] = Array.apply(null, Array(X[0].length)).map(Array.prototype.valueOf,[]);
+		var f = 0
+
+		_.each(classCount, function(v,classname){
+			//initialize the class counts to 0
+			classCount[classname] = 0.0;
+			//each class mapping in featuresByClass is an array of length of first row in training data
+			featuresByClass[classname] = Array.apply(null, []);
+
 			counter++;
-			if (counter === _.keys(classCount).length) {
+			if (counter === _.keys(classCount).length) { // this happens once.
 				f = cb(classesSeen,classCount,numClasses,featuresByClass,X,y);
 				
 			}
@@ -40,37 +66,41 @@ function Fitter(X,y) {
 		"classesSeen" : classesSeen,
 		"numClasses": numClasses,
 		"classCount" : classCount,
-		"piClass" : _.extend(classCount),
+		"piClass" : newObjectExtend(classCount),
 		"featuresByClass" : featuresByClass,
 		"X" : X,
 		"y" : y,
 		"calcStatisticsForFeatureOfClass" : function(){
 			var self = this;
-			_.each(self.featuresByClass, function(v,k){
-				_.each(v,function(val,i){
-					var mean = stats.mean(val);
+			_.each(self.featuresByClass, function(val,classname){
 
-					// THIS MAY NEED TO BE FIXED BECAUSE CANT COMPUTE GAUSSIAN WITH 0 VARIANCE
+				_.each(self.X,function(v,j){
+					var mean = stats.mean(val);
 					var variance =  stats.variance(val);
-					self.featuresByClass[k][i] = gaussian(mean,variance);
-				})
+					console.log(val);
+					console.log(mean);
+					console.log(variance);
+					// Can't create a gaussian with 0 variance
+
+					if (variance!==0.0) self.featuresByClass[classname][j] = gaussian(mean,variance);
+					else self.featuresByClass[classname][j] = FakeGaussianDiracInLimit(mean,variance);
+				});
 			});
 		},
 		"calcPiClass" : function() {
 			var self = this;
-			_.each(self.piClass,function(v,k){
-				self.piClass[k] = self.classCount[k]/self.X.length
+			_.each(self.piClass,function(v,classname){
+				self.piClass[classname] = self.classCount[classname]/self.X.length
 			});
 		},
 		"fit": function(cb) {
 			var self = this;
 
 			_.each(self.X, function(v,i) {
-				var classLabel = y[i];
-				self.classCount[y[i]] +=1;
-				_.each(self.X[i], function(va,j){
-					console.log(self.featuresByClass)
-					self.featuresByClass[classLabel][j].push(self.X[i][j]); 
+				var classLabel = self.y[i];
+				self.classCount[self.y[i]] +=1;
+				_.each(self.X[i], function(val,j){
+					self.featuresByClass[classLabel].push(val); 
 				});
 			});
 			self.calcPiClass();

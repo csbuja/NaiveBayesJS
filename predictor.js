@@ -1,7 +1,7 @@
 var _ = require("underscore");
 
 function Predictor(fitter, X) {
-	if (!X.length || fitter.X.length || X.length !== fitter.X.length || X.length[0]!==fitter.X.length) {
+	if (!X.length || !fitter.X.length || X[0].length!==fitter.X[0].length) {
 		throw new Error("Invalid X or fitter due to size.");
 	}
 
@@ -30,21 +30,28 @@ function Predictor(fitter, X) {
 			var self = this;
 			y = [];
 			//initialize L and run the predictor
-			_.each(self.X,function(v,i){
-				var currentExample = {};
-				_.each(self.fitter.piClass,function(val,k){
+			_.each(self.X,function(v,i){ // look through each row in X
+				var rowPosteriorByClass = {};
+
+				// make a object that maps a classname to a value proportional to the posterior
+				_.each(self.fitter.piClass,function(val,classname){ 
 					var prior = Math.log(val);
 					var j = 0;
-					var likelihood = Math.log(_.reduce(self.fitter.featuresByClass[k],function(memo,v){
+					var likelihood = Math.log(_.reduce(self.fitter.featuresByClass[classname],function(memo,v){
 						var xFeatureValue = self.X[i][j];
 						++j;
+						// console.log(v)
 						return memo * v.pdf(xFeatureValue);
-					},1));
-					currentExample[k] = prior + likelihood; //from log rules
-				});
+					},1)); //start at 1 because the reduction is a product
 
-				y.push(self.calcMax(currentExample));
+					//from log rules
+					//this is not the actual posterior but is proportional to the posterior
+					 var posterior = prior + likelihood; 
+					 rowPosteriorByClass[classname] = posterior;
+				});
+				y.push(self.calcMax(rowPosteriorByClass)); // predicts the class with the maximum postestior
 			});
+			console.log(y)
 			return cb(y);
 		}
 	};
