@@ -37,17 +37,21 @@ function Predictor(fitter, X) {
 				_.each(self.fitter.piClass,function(val,classname){ 
 					var prior = Math.log(val);
 					var j = 0;
-					var likelihood = Math.log(_.reduce(self.fitter.featuresByClass[classname],function(memo,v){
+
+					//log of a product is a sum of logs
+					var likelihood = _.reduce(self.fitter.featuresByClass[classname],function(memo,v){
 						var xFeatureValue = self.X[i][j];
 						++j;
-						return memo * v.pdf(xFeatureValue);
-					},1)); //start at 1 because the reduction is a product
+						var log_pdf = Math.log(v.pdf(xFeatureValue))
+						return memo + log_pdf; //api is the same for binary and continuous value
+					},0); //start at 0 because the reduction is a sum
 
 					//from log rules
 					//this is not the actual posterior but is proportional to the posterior
 					 var posterior = prior + likelihood; 
 					 rowPosteriorByClass[classname] = posterior;
 				});
+
 				y.push(self.calcMax(rowPosteriorByClass)); // predicts the class with the maximum postestior
 			});
 
