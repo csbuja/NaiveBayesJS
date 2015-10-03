@@ -10,6 +10,10 @@ y is a 1-d array
 
 #Example
 ```javascript
+
+var Fitter = require('./fitter');
+var Predictor = require('./predictor');
+
 var trainingX2 = [[1,0],[0,1],[1,0],[0,1],[1,1],[0,1]];
 var trainingY2 = ['Sydney','Paris','Sydney','Paris','Sydney','Paris'];
 var testX2 =[[1,0],[0,1],[1,1]];
