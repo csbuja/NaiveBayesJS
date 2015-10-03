@@ -1,7 +1,13 @@
 # Naive Bayes Classifier  
-Classifies continuous or binary data using a naive bayes strategy.  
+Classifies continuous or binary data using a naive bayes strategy in Node.js.  
 
 None of this is vectorized, so it's not very fast.  
+
+#Dependencies
+Requires Node.js. Download it from nodejs.org.
+
+I use stats-lite, gaussian, underscore, and promise libraries that can be downloaded from npm. They are all listed in the package.json file, so just run npm install to get all the necessary libraries.
+
 
 #API
 dataType can be 'binary' or 'continouous_value'  
